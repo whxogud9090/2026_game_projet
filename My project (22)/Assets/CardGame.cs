@@ -1,73 +1,70 @@
-using UnityEngine;
-using NUnit.Framework;
+using System.Collections;
 using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.UI;
 
 public class CardGame : MonoBehaviour
 {
-
+    [Header("Board Setup")]
+    [Min(1)] public int pairCount = 4;
     public List<Sprite> sprites = new List<Sprite>();
+    public Sprite backSprite;
+    public Color backColor = new Color(0.18f, 0.61f, 0.82f, 1f);
+    public Card cardPrefab;
+    public RectTransform cardRoot;
+
+    [Header("Layout")]
+    public Vector2 boardSize = new Vector2(720f, 360f);
+    public Vector2 cellSize = new Vector2(100f, 100f);
+    public Vector2 spacing = new Vector2(18f, 18f);
+
+    [Header("Runtime")]
     public List<Card> cards = new List<Card>();
-    private Card firstCard = null;
-    private Card SecondCard = null;
-    private bool isChecking = false;
-    
 
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
+    private Card firstCard;
+    private Card secondCard;
+    private bool isChecking;
+
+    private void Start()
     {
-        startGame();
+        SetupBoard();
     }
 
-    //Ä«µå ¼¯°í ´Ù µÚÁı±â
-    void startGame()
+    private void OnValidate()
     {
-        List<int> pairNumbers = GeneratePairNumbers(cards.Count);
-        for (int i = 0; i < pairNumbers.Count; ++i)
-        {
-            cards[i].SetCardNumber(pairNumbers[i]);
-
-            cards[i].SetImage(sprites[pairNumbers[i]]);
-        }
-
-        //µÚÁı±â
-
-        for (int i = 0; i < pairNumbers.Count; ++i)
-        {
-            cards[i].isFront = false;
-        }
+        pairCount = Mathf.Max(1, pairCount);
     }
 
-    //Ä«µå ¸Â´ÂÁö Ã¼Å©
-    void CheckCard()
+    [ContextMenu("Setup Board")]
+    public void SetupBoard()
     {
-        isChecking = true;
+        pairCount = Mathf.Max(1, pairCount);
 
-        if(firstCard.number == SecondCard.number)
+        PrepareReferences();
+        RemoveOldCards();
+        CreateCards();
+        GiveCardsNumbers();
+    }
+
+    // 1. Pair countë§Œí¼ ìˆ«ìë¥¼ 2ê°œì”© ë§Œë“¤ê³  ì„ì€ ë’¤ ì¹´ë“œì— ë„£ëŠ”ë‹¤.
+    private void GiveCardsNumbers()
+    {
+        firstCard = null;
+        secondCard = null;
+        isChecking = false;
+
+        List<int> pairNumbers = GeneratePairNumbers(pairCount * 2);
+        for (int i = 0; i < cards.Count; i++)
         {
-            //Á¤´ä.Å¬¸¯ ¾ÈµÇ°Ô;
-            //Ä«µå ¸ÂÀ½
-            firstCard. ChangeColor(Color.red);
-            SecondCard.ChangeColor(Color.red);
-
-            firstCard.isMatched = true;
-            SecondCard.isMatched =true;
-
-            firstCard = null;
-            SecondCard = null;
-
-            isChecking = false;
-        }
-        else
-        {
-            Invoke("HideCard", 1.0f);
-            //Ä«µå µÚÁı±â
-            
+            int number = pairNumbers[i];
+            Sprite faceSprite = number < sprites.Count ? sprites[number] : null;
+            cards[i].Setup(this, number, faceSprite, backSprite, backColor);
         }
     }
 
     public void OnClickCard(Card card)
     {
-        if (isChecking)
+        if (isChecking || card == null || card.isMatched || card.isFront)
         {
             return;
         }
@@ -76,58 +73,155 @@ public class CardGame : MonoBehaviour
         {
             firstCard = card;
             firstCard.Flip(true);
+            return;
+        }
+
+        if (firstCard == card)
+        {
+            return;
+        }
+
+        secondCard = card;
+        secondCard.Flip(true);
+        StartCoroutine(CheckCardRoutine());
+    }
+
+    // 2. ë‘ ì¥ì„ ì—´ì—ˆìœ¼ë©´ ê°™ì€ ì¹´ë“œì¸ì§€ í™•ì¸í•œë‹¤.
+    private IEnumerator CheckCardRoutine()
+    {
+        isChecking = true;
+        yield return new WaitForSeconds(0.5f);
+
+        if (firstCard.number == secondCard.number)
+        {
+            firstCard.SetMatched();
+            secondCard.SetMatched();
         }
         else
         {
-            SecondCard = card;
-            SecondCard.Flip(true);
+            firstCard.Flip(false);
+            secondCard.Flip(false);
         }
-        if (firstCard != null && SecondCard != null)
-        {
-            CheckCard();
-        }
-    }
-
-    //´Ù½Ã µÚÁı±â
-    void HideCard()
-    {
-        firstCard.isFront = false;
-        SecondCard.isFront = false;
-
-        firstCard.Flip(false);
-        SecondCard.Flip(false);
 
         firstCard = null;
-        SecondCard = null;
-
+        secondCard = null;
         isChecking = false;
     }
 
-    //Æä¾î ³Ñ¹öÀÇ ¾Ë°í¸®Áò
-    List<int> GeneratePairNumbers(int cardCount)
+    private void PrepareReferences()
     {
-        //8
-        int pairCount = cardCount / 2;
-        List<int> newCardNumbers = new List<int>();
+        if (cardPrefab == null && cards.Count > 0)
+        {
+            cardPrefab = cards[0];
+        }
 
+        if (cardRoot == null && cardPrefab != null)
+        {
+            cardRoot = cardPrefab.transform.parent as RectTransform;
+        }
 
-        for (int i = 0; i < pairCount; ++i)
+        if (cardRoot == null)
+        {
+            Canvas canvas = FindFirstObjectByType<Canvas>();
+            GameObject boardObject = new GameObject("CardBoard", typeof(RectTransform), typeof(GridLayoutGroup));
+            boardObject.transform.SetParent(canvas.transform, false);
+            cardRoot = boardObject.GetComponent<RectTransform>();
+            cardRoot.anchorMin = new Vector2(0.5f, 0.5f);
+            cardRoot.anchorMax = new Vector2(0.5f, 0.5f);
+            cardRoot.pivot = new Vector2(0.5f, 0.5f);
+            cardRoot.anchoredPosition = new Vector2(0f, -40f);
+            cardRoot.sizeDelta = boardSize;
+        }
+    }
+
+    // 3. ì´ì „ì— ìˆë˜ ì¹´ë“œë“¤ì€ í…œí”Œë¦¿ 1ì¥ì„ ì œì™¸í•˜ê³  ì •ë¦¬í•œë‹¤.
+    private void RemoveOldCards()
+    {
+        if (cardPrefab == null)
+        {
+            return;
+        }
+
+        for (int i = 0; i < cards.Count; i++)
+        {
+            if (cards[i] == null || cards[i] == cardPrefab)
+            {
+                continue;
+            }
+
+            if (Application.isPlaying)
+            {
+                Destroy(cards[i].gameObject);
+            }
+            else
+            {
+                DestroyImmediate(cards[i].gameObject);
+            }
+        }
+
+        cardPrefab.gameObject.SetActive(false);
+        cards.Clear();
+    }
+
+    // 4. pairCountì— ë§ê²Œ ì¹´ë“œë“¤ì„ ìƒˆë¡œ ë§Œë“ ë‹¤.
+    private void CreateCards()
+    {
+        if (cardPrefab == null || cardRoot == null)
+        {
+            return;
+        }
+
+        GridLayoutGroup grid = cardRoot.GetComponent<GridLayoutGroup>();
+        if (grid == null)
+        {
+            grid = cardRoot.gameObject.AddComponent<GridLayoutGroup>();
+        }
+
+        int totalCards = pairCount * 2;
+        int columns = Mathf.CeilToInt(Mathf.Sqrt(totalCards));
+        int rows = Mathf.CeilToInt(totalCards / (float)columns);
+
+        float width = (columns * cellSize.x) + ((columns - 1) * spacing.x) + 40f;
+        float height = (rows * cellSize.y) + ((rows - 1) * spacing.y) + 40f;
+        cardRoot.sizeDelta = new Vector2(Mathf.Max(boardSize.x, width), Mathf.Max(boardSize.y, height));
+
+        grid.cellSize = cellSize;
+        grid.spacing = spacing;
+        grid.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
+        grid.constraintCount = columns;
+        grid.childAlignment = TextAnchor.MiddleCenter;
+        grid.padding = new RectOffset(20, 20, 20, 20);
+
+        for (int i = 0; i < totalCards; i++)
+        {
+            Card newCard = Instantiate(cardPrefab, cardRoot);
+            newCard.gameObject.name = $"Card_{i + 1}";
+            newCard.gameObject.SetActive(true);
+            newCard.transform.localScale = Vector3.one;
+            newCard.ResetState();
+            cards.Add(newCard);
+        }
+    }
+
+    private List<int> GeneratePairNumbers(int cardCount)
+    {
+        int localPairCount = cardCount / 2;
+        List<int> newCardNumbers = new List<int>(cardCount);
+
+        for (int i = 0; i < localPairCount; i++)
         {
             newCardNumbers.Add(i);
             newCardNumbers.Add(i);
         }
 
-        //¼ÅÇÃ
         for (int i = newCardNumbers.Count - 1; i > 0; i--)
         {
             int temp = newCardNumbers[i];
             int rnd = Random.Range(0, i + 1);
-            
             newCardNumbers[i] = newCardNumbers[rnd];
             newCardNumbers[rnd] = temp;
         }
 
         return newCardNumbers;
-
     }
 }

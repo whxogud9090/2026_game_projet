@@ -1,87 +1,132 @@
-using System.Globalization;
 using TMPro;
-using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UI;
 
 public class Card : MonoBehaviour
 {
-
-    public float rotateY;
     public TextMeshProUGUI text;
     public bool isFront = true;
-    private Quaternion flipRotation = Quaternion.Euler(0, 180f, 0);
-    private Quaternion originRotation = Quaternion.Euler(0, 0, 0);
     public int number;
     public CardGame cardGame;
-    public bool isMatched = false;
+    public bool isMatched;
 
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
+    private Image cardImage;
+    private Button cardButton;
+    private Sprite frontSprite;
+    private Sprite hiddenSprite;
+    private Color hiddenColor = Color.blue;
 
-    // Update is called once per frame
-    //&& = and || = or
-    // 0 => 180 => -180 => 0
-
-    //x<180
-    //
-    void Update()
+    private void Awake()
     {
-        
-        float currentY = transform.eulerAngles.y;
+        CacheComponents();
+    }
 
-        if (isFront)
-        {
-            transform.rotation = Quaternion.Slerp(transform.rotation, originRotation, rotateY * Time.deltaTime);
-        }
-
-        else
-        {
-            transform.rotation = Quaternion.Slerp(transform.rotation, flipRotation, rotateY * Time.deltaTime);
-
-        }
-            /*if (currentY < 180 && currentY >= 0)
-            {
-                transform.Rotate(0, rotateY, 0);
-            }
-            else if (isClick)
-            {
-                transform.Rotate(0, rotateY, 0);
-            }*/
-        }
     public void ClickCard()
     {
-        if (isMatched)
-        {
-
-        }
-        else
+        if (!isMatched && cardGame != null)
         {
             cardGame.OnClickCard(this);
         }
     }
 
-
-    public void Flip(bool isFront)
+    public void Setup(CardGame owner, int newNumber, Sprite newFrontSprite, Sprite newBackSprite, Color newBackColor)
     {
-        this.isFront = isFront;
-    }
+        CacheComponents();
 
-    public void SetCardNumber(int newNumber)
-    {
-        text = GetComponentInChildren<TextMeshProUGUI>();
+        cardGame = owner;
         number = newNumber;
-        text.text = number.ToString();
+        frontSprite = newFrontSprite;
+        hiddenSprite = newBackSprite;
+        hiddenColor = newBackColor;
+        isMatched = false;
+
+        if (cardButton != null)
+        {
+            cardButton.interactable = true;
+        }
+
+        Flip(false);
     }
 
-    public void ChangeColor(Color newColor)
+    public void Flip(bool showFront)
     {
-        GetComponent<Image>().color = newColor;
+        isFront = showFront;
+        RefreshVisual();
     }
 
-    public void SetImage(Sprite sprite)
+    public void SetMatched()
     {
-        GetComponent<Image>().sprite = sprite;
+        isMatched = true;
+        isFront = true;
+
+        if (cardButton != null)
+        {
+            cardButton.interactable = false;
+        }
+
+        RefreshVisual();
     }
 
+    // 새로 생성된 카드가 시작할 때 기본 상태로 돌아가게 한다.
+    public void ResetState()
+    {
+        CacheComponents();
+        isMatched = false;
+        isFront = false;
+        number = 0;
+        if (cardButton != null)
+        {
+            cardButton.interactable = true;
+        }
+        RefreshVisual();
+    }
 
+    private void CacheComponents()
+    {
+        if (text == null)
+        {
+            text = GetComponentInChildren<TextMeshProUGUI>(true);
+        }
+
+        if (cardImage == null)
+        {
+            cardImage = GetComponent<Image>();
+        }
+
+        if (cardButton == null)
+        {
+            cardButton = GetComponent<Button>();
+        }
+    }
+
+    private void RefreshVisual()
+    {
+        CacheComponents();
+
+        if (cardImage == null)
+        {
+            return;
+        }
+
+        if (isFront)
+        {
+            cardImage.sprite = frontSprite;
+            cardImage.color = Color.white;
+
+            if (text != null)
+            {
+                text.text = frontSprite == null ? (number + 1).ToString() : string.Empty;
+            }
+        }
+        else
+        {
+            cardImage.sprite = hiddenSprite;
+            cardImage.color = hiddenSprite == null ? hiddenColor : Color.white;
+
+            if (text != null)
+            {
+                text.text = string.Empty;
+            }
+        }
+    }
 }

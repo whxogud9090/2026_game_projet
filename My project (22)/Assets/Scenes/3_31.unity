@@ -1416,7 +1416,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 73057ae5aa8bf784eaf53c8ccc30b89c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: '::'
+  pairCount: 10
   sprites: []
+  backSprite: {fileID: 0}
+  backColor: {r: 0.18, g: 0.61, b: 0.82, a: 1}
+  cardPrefab: {fileID: 0}
+  cardRoot: {fileID: 0}
+  boardSize: {x: 720, y: 360}
+  cellSize: {x: 100, y: 100}
+  spacing: {x: 18, y: 18}
   cards:
   - {fileID: 1372868704}
   - {fileID: 514142997}
