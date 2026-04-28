@@ -367,7 +367,6 @@ MonoBehaviour:
   rotateY: 5
   text: {fileID: 660618560}
   number: 0
-  displayText: 
   cardGame: {fileID: 1108894446}
   isFront: 0
   isMatched: 0
@@ -524,7 +523,6 @@ MonoBehaviour:
   rotateY: 5
   text: {fileID: 1137516701}
   number: 0
-  displayText: 
   cardGame: {fileID: 1108894446}
   isFront: 0
   isMatched: 0
@@ -1281,7 +1279,6 @@ MonoBehaviour:
   rotateY: 5
   text: {fileID: 880975553}
   number: 0
-  displayText: 
   cardGame: {fileID: 1108894446}
   isFront: 0
   isMatched: 0
@@ -1360,7 +1357,7 @@ MonoBehaviour:
   sprites: []
   backSprite: {fileID: 0}
   backColor: {r: 0.91, g: 0.44, b: 0.32, a: 1}
-  useSymbols: 0
+  useSymbols: 1
   symbols:
   - "\u2605"
   - "\u25CF"
@@ -1370,8 +1367,18 @@ MonoBehaviour:
   - "\u2665"
   - "\u2663"
   - "\u2660"
+  - "\u271A"
+  - "\u2716"
   - "\u2600"
   - "\u2602"
+  - "\u2601"
+  - "\u2618"
+  - "\u260E"
+  - "\u2691"
+  - "\u2699"
+  - "\u26A1"
+  - "\u2615"
+  - "\u266A"
   cardPrefab: {fileID: 1372868704}
   cardRoot: {fileID: 0}
   boardSize: {x: 720, y: 360}
@@ -1514,7 +1521,6 @@ MonoBehaviour:
   rotateY: 5
   text: {fileID: 1961122640}
   number: 0
-  displayText: 
   cardGame: {fileID: 1108894446}
   isFront: 0
   isMatched: 0
@@ -1808,7 +1814,6 @@ MonoBehaviour:
   rotateY: 5
   text: {fileID: 2108616110}
   number: 0
-  displayText: 
   cardGame: {fileID: 1108894446}
   isFront: 0
   isMatched: 0
@@ -1909,7 +1914,6 @@ MonoBehaviour:
   rotateY: 5
   text: {fileID: 800333109}
   number: 0
-  displayText: 
   cardGame: {fileID: 1108894446}
   isFront: 0
   isMatched: 0
@@ -2122,7 +2126,6 @@ MonoBehaviour:
   rotateY: 5
   text: {fileID: 342650601}
   number: 0
-  displayText: 
   cardGame: {fileID: 1108894446}
   isFront: 0
   isMatched: 0
@@ -2279,7 +2282,6 @@ MonoBehaviour:
   rotateY: 5
   text: {fileID: 1539735019}
   number: 0
-  displayText: 
   cardGame: {fileID: 1108894446}
   isFront: 0
   isMatched: 0
